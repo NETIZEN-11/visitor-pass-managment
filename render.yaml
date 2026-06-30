@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: visitor-pass-backend
+    env: node
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.js
+    rootDir: backend
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
