@@ -1,6 +1,5 @@
 const ActivityLog = require('../models/ActivityLog');
 
-// Log activity
 exports.logActivity = async (userId, action, details = null, targetModel = null, targetId = null, req = null) => {
   try {
     const logData = {
@@ -23,7 +22,6 @@ exports.logActivity = async (userId, action, details = null, targetModel = null,
   }
 };
 
-// Log failed activity
 exports.logFailedActivity = async (userId, action, errorMessage, req = null) => {
   try {
     const logData = {
@@ -44,14 +42,13 @@ exports.logFailedActivity = async (userId, action, errorMessage, req = null) => 
   }
 };
 
-// Middleware to automatically log certain actions
 exports.autoLogActivity = (action, getDetails = null) => {
   return async (req, res, next) => {
-    // Store original send function
+
     const originalSend = res.send;
 
     res.send = function(data) {
-      // Log only on successful responses
+
       if (res.statusCode >= 200 && res.statusCode < 300) {
         const details = getDetails ? getDetails(req, res) : null;
         exports.logActivity(
@@ -64,7 +61,6 @@ exports.autoLogActivity = (action, getDetails = null) => {
         ).catch(err => console.error('Auto-log error:', err));
       }
 
-      // Call original send
       originalSend.call(this, data);
     };
 

@@ -7,9 +7,6 @@ const Pass = require('../models/Pass');
 const CheckLog = require('../models/CheckLog');
 const { protect, authorize } = require('../middleware/auth');
 
-// @route   GET /api/dashboard/stats
-// @desc    Get dashboard statistics
-// @access  Private
 router.get('/stats', protect, async (req, res) => {
   try {
     const today = new Date();
@@ -17,13 +14,11 @@ router.get('/stats', protect, async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Total counts
     const totalVisitors = await Visitor.countDocuments();
     const totalAppointments = await Appointment.countDocuments();
     const totalPasses = await Pass.countDocuments();
     const activeUsers = await User.countDocuments({ isActive: true });
 
-    // Today's stats
     const todayCheckIns = await CheckLog.countDocuments({
       checkInTime: { $gte: today, $lt: tomorrow }
     });
@@ -45,7 +40,6 @@ router.get('/stats', protect, async (req, res) => {
       validUntil: { $gte: new Date() }
     });
 
-    // Recent activity
     const recentCheckIns = await CheckLog.find()
       .populate('visitor', 'name photo')
       .populate('pass', 'passNumber')
@@ -61,7 +55,6 @@ router.get('/stats', protect, async (req, res) => {
       .sort({ scheduledDate: 1 })
       .limit(5);
 
-    // Stats by status
     const appointmentsByStatus = await Appointment.aggregate([
       {
         $group: {
@@ -111,9 +104,6 @@ router.get('/stats', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/dashboard/analytics
-// @desc    Get analytics data
-// @access  Private (Admin)
 router.get('/analytics', protect, authorize('admin'), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -126,7 +116,6 @@ router.get('/analytics', protect, authorize('admin'), async (req, res) => {
       };
     }
 
-    // Visitors by day
     const visitorsByDay = await CheckLog.aggregate([
       { $match: dateFilter },
       {
@@ -140,7 +129,6 @@ router.get('/analytics', protect, authorize('admin'), async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // Peak hours
     const peakHours = await CheckLog.aggregate([
       { $match: dateFilter },
       {
@@ -152,7 +140,6 @@ router.get('/analytics', protect, authorize('admin'), async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // Average visit duration
     const avgDuration = await CheckLog.aggregate([
       {
         $match: {
@@ -175,7 +162,6 @@ router.get('/analytics', protect, authorize('admin'), async (req, res) => {
       }
     ]);
 
-    // Top visitors
     const topVisitors = await CheckLog.aggregate([
       { $match: dateFilter },
       {
@@ -188,7 +174,6 @@ router.get('/analytics', protect, authorize('admin'), async (req, res) => {
       { $limit: 10 }
     ]);
 
-    // Populate visitor details
     await CheckLog.populate(topVisitors, {
       path: '_id',
       select: 'name email company'
@@ -212,9 +197,6 @@ router.get('/analytics', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// @route   GET /api/dashboard/export
-// @desc    Export data to CSV
-// @access  Private (Admin)
 router.get('/export', protect, authorize('admin'), async (req, res) => {
   try {
     const { type, startDate, endDate } = req.query;
@@ -263,7 +245,6 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
         });
     }
 
-    // Convert to CSV (simple implementation)
     if (data.length === 0) {
       return res.status(404).json({
         success: false,

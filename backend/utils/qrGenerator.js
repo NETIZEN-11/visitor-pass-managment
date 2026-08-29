@@ -1,6 +1,5 @@
 const QRCode = require('qrcode');
 
-// Generate QR code
 exports.generateQRCode = async (data) => {
   try {
     const qrCodeDataURL = await QRCode.toDataURL(JSON.stringify(data), {
@@ -17,7 +16,6 @@ exports.generateQRCode = async (data) => {
   }
 };
 
-// Verify QR code data
 exports.verifyQRData = (data) => {
   try {
     const parsed = JSON.parse(data);

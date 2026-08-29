@@ -19,7 +19,7 @@ const QRScanner = () => {
       const response = await axios.post('/api/checklogs/scan', {
         passNumber: passNumber.trim()
       });
-      
+
       setScanResult(response.data);
       toast.success(response.data.message);
       setPassNumber('');

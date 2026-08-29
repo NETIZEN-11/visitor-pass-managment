@@ -5,9 +5,6 @@ const CheckLog = require('../models/CheckLog');
 const Pass = require('../models/Pass');
 const { protect, authorize } = require('../middleware/auth');
 
-// @route   POST /api/checklogs/checkin
-// @desc    Check-in visitor
-// @access  Private (Security, Admin)
 router.post('/checkin', protect, authorize('security', 'admin'), [
   body('passId').notEmpty().withMessage('Pass ID is required')
 ], async (req, res) => {
@@ -19,7 +16,6 @@ router.post('/checkin', protect, authorize('security', 'admin'), [
 
     const { passId, location, temperature, notes } = req.body;
 
-    // Check if pass exists
     const pass = await Pass.findById(passId).populate('visitor');
     if (!pass) {
       return res.status(404).json({
@@ -28,7 +24,6 @@ router.post('/checkin', protect, authorize('security', 'admin'), [
       });
     }
 
-    // Validate pass
     if (pass.status !== 'active') {
       return res.status(400).json({
         success: false,
@@ -44,7 +39,6 @@ router.post('/checkin', protect, authorize('security', 'admin'), [
       });
     }
 
-    // Check if already checked in
     const existingCheckIn = await CheckLog.findOne({
       pass: passId,
       status: 'checked-in'
@@ -57,7 +51,6 @@ router.post('/checkin', protect, authorize('security', 'admin'), [
       });
     }
 
-    // Create check-in log
     const checkLog = await CheckLog.create({
       pass: passId,
       visitor: pass.visitor._id,
@@ -84,9 +77,6 @@ router.post('/checkin', protect, authorize('security', 'admin'), [
   }
 });
 
-// @route   POST /api/checklogs/checkout
-// @desc    Check-out visitor
-// @access  Private (Security, Admin)
 router.post('/checkout', protect, authorize('security', 'admin'), [
   body('checkLogId').notEmpty().withMessage('Check log ID is required')
 ], async (req, res) => {
@@ -135,9 +125,6 @@ router.post('/checkout', protect, authorize('security', 'admin'), [
   }
 });
 
-// @route   POST /api/checklogs/scan
-// @desc    Scan QR code and check-in/out
-// @access  Private (Security, Admin)
 router.post('/scan', protect, authorize('security', 'admin'), [
   body('passNumber').notEmpty().withMessage('Pass number is required')
 ], async (req, res) => {
@@ -149,7 +136,6 @@ router.post('/scan', protect, authorize('security', 'admin'), [
 
     const { passNumber, location, temperature, notes } = req.body;
 
-    // Find pass
     const pass = await Pass.findOne({ passNumber }).populate('visitor host');
     if (!pass) {
       return res.status(404).json({
@@ -158,7 +144,6 @@ router.post('/scan', protect, authorize('security', 'admin'), [
       });
     }
 
-    // Validate pass
     if (pass.status !== 'active') {
       return res.status(400).json({
         success: false,
@@ -176,7 +161,6 @@ router.post('/scan', protect, authorize('security', 'admin'), [
       });
     }
 
-    // Check if already checked in
     const existingCheckIn = await CheckLog.findOne({
       pass: pass._id,
       status: 'checked-in'
@@ -186,7 +170,7 @@ router.post('/scan', protect, authorize('security', 'admin'), [
     let action;
 
     if (existingCheckIn) {
-      // Check-out
+
       existingCheckIn.checkOutTime = new Date();
       existingCheckIn.checkOutBy = req.user._id;
       existingCheckIn.status = 'checked-out';
@@ -196,7 +180,7 @@ router.post('/scan', protect, authorize('security', 'admin'), [
       checkLog = existingCheckIn;
       action = 'checkout';
     } else {
-      // Check-in
+
       checkLog = await CheckLog.create({
         pass: pass._id,
         visitor: pass.visitor._id,
@@ -226,16 +210,13 @@ router.post('/scan', protect, authorize('security', 'admin'), [
   }
 });
 
-// @route   GET /api/checklogs
-// @desc    Get all check logs
-// @access  Private
 router.get('/', protect, async (req, res) => {
   try {
     const { status, search, page = 1, limit = 10, date } = req.query;
-    
+
     const query = {};
     if (status) query.status = status;
-    
+
     if (date) {
       const startDate = new Date(date);
       startDate.setHours(0, 0, 0, 0);
@@ -271,9 +252,6 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/checklogs/:id
-// @desc    Get check log by ID
-// @access  Private
 router.get('/:id', protect, async (req, res) => {
   try {
     const checkLog = await CheckLog.findById(req.params.id)
@@ -281,7 +259,7 @@ router.get('/:id', protect, async (req, res) => {
       .populate('pass', 'passNumber purpose validFrom validUntil')
       .populate('checkInBy', 'name email')
       .populate('checkOutBy', 'name email');
-    
+
     if (!checkLog) {
       return res.status(404).json({
         success: false,
@@ -302,9 +280,6 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/checklogs/visitor/:visitorId
-// @desc    Get check logs by visitor
-// @access  Private
 router.get('/visitor/:visitorId', protect, async (req, res) => {
   try {
     const checkLogs = await CheckLog.find({ visitor: req.params.visitorId })

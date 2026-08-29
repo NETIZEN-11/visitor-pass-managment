@@ -1,9 +1,8 @@
 let client;
 
-// Initialize Twilio client only if credentials are provided
 try {
-  if (process.env.TWILIO_ACCOUNT_SID && 
-      process.env.TWILIO_AUTH_TOKEN && 
+  if (process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN &&
       process.env.TWILIO_ACCOUNT_SID.startsWith('AC')) {
     const twilio = require('twilio');
     client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
@@ -12,7 +11,6 @@ try {
   console.log('Twilio not configured. SMS functionality disabled.');
 }
 
-// Send SMS
 exports.sendSMS = async (phone, message) => {
   try {
     if (!client) {
@@ -34,7 +32,6 @@ exports.sendSMS = async (phone, message) => {
   }
 };
 
-// SMS templates
 exports.appointmentInviteSMS = (visitorName, date, time) => {
   return `Hi ${visitorName}, you have an appointment on ${date} at ${time}. Please bring valid ID. - Visitor Pass System`;
 };

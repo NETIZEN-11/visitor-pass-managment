@@ -100,7 +100,7 @@ const DigitalPass = () => {
           </span>
         </div>
 
-        {/* Pass Lookup Input if not directly loaded */}
+        {}
         <div className="card mb-6 print:hidden">
           <form onSubmit={handleSearch} className="space-y-3">
             <label className="label text-xs font-bold text-gray-700">Enter Visitor Pass Number</label>
@@ -142,7 +142,7 @@ const DigitalPass = () => {
           </div>
         ) : pass ? (
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200" id="printable-badge">
-            {/* Header */}
+            {}
             <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-6 text-center relative">
               <div className="flex items-center justify-center space-x-2 mb-2">
                 <BuildingOfficeIcon className="w-7 h-7 text-blue-200" />
@@ -153,7 +153,7 @@ const DigitalPass = () => {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Visitor Profile & Photo */}
+              {}
               <div className="flex items-center space-x-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-2 border-blue-500 flex-shrink-0 flex items-center justify-center">
                   {pass.visitor?.photo ? (
@@ -169,7 +169,7 @@ const DigitalPass = () => {
                 </div>
               </div>
 
-              {/* QR Code Container */}
+              {}
               <div className="flex flex-col items-center justify-center p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
                 {pass.qrCode ? (
                   <img src={pass.qrCode} alt="Pass QR Code" className="w-48 h-48 rounded-lg shadow-sm" />
@@ -183,7 +183,7 @@ const DigitalPass = () => {
                 </p>
               </div>
 
-              {/* Pass Information Grid */}
+              {}
               <div className="grid grid-cols-2 gap-3 text-sm bg-gray-50 p-4 rounded-xl">
                 <div>
                   <span className="text-xs font-medium text-gray-500 block">Host Name</span>
@@ -208,7 +208,7 @@ const DigitalPass = () => {
                 </div>
               </div>
 
-              {/* Actions */}
+              {}
               <div className="flex flex-wrap gap-3 pt-2 print:hidden">
                 <button
                   onClick={handleDownloadPDF}

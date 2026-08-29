@@ -17,7 +17,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    // Refresh data every 30 seconds
+
     const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -122,7 +122,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Action Shortcuts */}
+      {}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Link to="/scanner" className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow hover:shadow-md transition text-center">
           <span className="block text-lg font-bold">QR Scanner</span>
@@ -142,7 +142,7 @@ const Dashboard = () => {
         </Link>
       </div>
 
-      {/* Stats Grid */}
+      {}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => (
           <Link key={stat.name} to={stat.link} className="card hover:shadow-lg transition-shadow">
@@ -159,9 +159,9 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Recent Activity */}
+      {}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Recent Check-ins */}
+        {}
         <div className="card">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Recent Check-ins</h2>
@@ -208,7 +208,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Upcoming Appointments */}
+        {}
         <div className="card">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Upcoming Appointments</h2>
@@ -252,10 +252,10 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Status Breakdown */}
+      {}
       {stats?.breakdown && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Appointments by Status */}
+          {}
           <div className="card">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Appointments by Status</h2>
             <div className="space-y-3">
@@ -271,7 +271,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Passes by Status */}
+          {}
           <div className="card">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Passes by Status</h2>
             <div className="space-y-3">

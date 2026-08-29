@@ -5,9 +5,6 @@ const Visitor = require('../models/Visitor');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../config/multer');
 
-// @route   POST /api/visitors
-// @desc    Register a new visitor
-// @access  Private
 router.post('/', protect, upload.single('photo'), [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
@@ -51,13 +48,10 @@ router.post('/', protect, upload.single('photo'), [
   }
 });
 
-// @route   GET /api/visitors
-// @desc    Get all visitors
-// @access  Private
 router.get('/', protect, async (req, res) => {
   try {
     const { search, page = 1, limit = 10, isBlacklisted } = req.query;
-    
+
     const query = {};
     if (search) {
       query.$or = [
@@ -93,13 +87,10 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/visitors/:id
-// @desc    Get visitor by ID
-// @access  Private
 router.get('/:id', protect, async (req, res) => {
   try {
     const visitor = await Visitor.findById(req.params.id);
-    
+
     if (!visitor) {
       return res.status(404).json({
         success: false,
@@ -120,9 +111,6 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   PUT /api/visitors/:id
-// @desc    Update visitor
-// @access  Private
 router.put('/:id', protect, upload.single('photo'), async (req, res) => {
   try {
     const { name, email, phone, idProof, idProofNumber, company, address, purpose } = req.body;
@@ -168,9 +156,6 @@ router.put('/:id', protect, upload.single('photo'), async (req, res) => {
   }
 });
 
-// @route   PUT /api/visitors/:id/blacklist
-// @desc    Blacklist/unblacklist visitor
-// @access  Private (Admin, Security)
 router.put('/:id/blacklist', protect, authorize('admin', 'security'), async (req, res) => {
   try {
     const { isBlacklisted, blacklistReason } = req.body;
@@ -202,9 +187,6 @@ router.put('/:id/blacklist', protect, authorize('admin', 'security'), async (req
   }
 });
 
-// @route   DELETE /api/visitors/:id
-// @desc    Delete visitor
-// @access  Private (Admin)
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const visitor = await Visitor.findByIdAndDelete(req.params.id);

@@ -16,7 +16,7 @@ const CheckLogs = () => {
 
   useEffect(() => {
     fetchCheckLogs();
-    // eslint-disable-next-line
+
   }, [filter]);
 
   const fetchCheckLogs = async () => {
@@ -91,7 +91,7 @@ const CheckLogs = () => {
         </button>
       </div>
 
-      {/* Filters and Search */}
+      {}
       <div className="card flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-80">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -119,7 +119,7 @@ const CheckLogs = () => {
         </div>
       </div>
 
-      {/* Logs Table */}
+      {}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">

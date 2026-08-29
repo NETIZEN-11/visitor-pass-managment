@@ -101,7 +101,7 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Quick Demo Role Auto-Fill */}
+        {}
         <div className="pt-2 border-t border-gray-200">
           <p className="text-xs font-semibold text-gray-500 mb-2 text-center">Quick Demo Login (Click to Fill):</p>
           <div className="grid grid-cols-3 gap-1.5 text-xs">
@@ -129,7 +129,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Public Visitor Shortcuts */}
+        {}
         <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
           <Link
             to="/pre-register"

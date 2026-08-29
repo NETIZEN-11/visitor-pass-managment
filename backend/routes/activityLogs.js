@@ -3,18 +3,15 @@ const router = express.Router();
 const ActivityLog = require('../models/ActivityLog');
 const { protect, authorize } = require('../middleware/auth');
 
-// @route   GET /api/activitylogs
-// @desc    Get all activity logs
-// @access  Private (Admin, Security)
 router.get('/', protect, authorize('admin', 'security'), async (req, res) => {
   try {
     const { action, userId, startDate, endDate, page = 1, limit = 20 } = req.query;
-    
+
     const query = {};
-    
+
     if (action) query.action = action;
     if (userId) query.user = userId;
-    
+
     if (startDate || endDate) {
       query.timestamp = {};
       if (startDate) query.timestamp.$gte = new Date(startDate);
@@ -45,9 +42,6 @@ router.get('/', protect, authorize('admin', 'security'), async (req, res) => {
   }
 });
 
-// @route   GET /api/activitylogs/my-activity
-// @desc    Get current user's activity logs
-// @access  Private
 router.get('/my-activity', protect, async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
@@ -75,13 +69,10 @@ router.get('/my-activity', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/activitylogs/stats
-// @desc    Get activity statistics
-// @access  Private (Admin)
 router.get('/stats', protect, authorize('admin'), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    
+
     const dateFilter = {};
     if (startDate || endDate) {
       dateFilter.timestamp = {};
@@ -89,7 +80,6 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
       if (endDate) dateFilter.timestamp.$lte = new Date(endDate);
     }
 
-    // Activity by action
     const activityByAction = await ActivityLog.aggregate([
       { $match: dateFilter },
       {
@@ -101,7 +91,6 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
       { $sort: { count: -1 } }
     ]);
 
-    // Activity by user
     const activityByUser = await ActivityLog.aggregate([
       { $match: dateFilter },
       {
@@ -114,13 +103,11 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
       { $limit: 10 }
     ]);
 
-    // Populate user details
     await ActivityLog.populate(activityByUser, {
       path: '_id',
       select: 'name email role'
     });
 
-    // Activity by day
     const activityByDay = await ActivityLog.aggregate([
       { $match: dateFilter },
       {
@@ -134,7 +121,6 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // Failed activities
     const failedActivities = await ActivityLog.countDocuments({
       ...dateFilter,
       status: 'failed'
@@ -150,7 +136,7 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
         activityByDay,
         failedActivities,
         totalActivities,
-        successRate: totalActivities > 0 
+        successRate: totalActivities > 0
           ? ((totalActivities - failedActivities) / totalActivities * 100).toFixed(2)
           : 100
       }
@@ -164,13 +150,10 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// @route   DELETE /api/activitylogs/cleanup
-// @desc    Delete old activity logs
-// @access  Private (Admin)
 router.delete('/cleanup', protect, authorize('admin'), async (req, res) => {
   try {
     const { days = 90 } = req.body;
-    
+
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 

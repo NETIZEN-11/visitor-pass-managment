@@ -21,7 +21,7 @@ const Appointments = () => {
 
   useEffect(() => {
     fetchAppointments();
-    // eslint-disable-next-line
+
   }, [filter]);
 
   const fetchAppointments = async () => {
@@ -49,7 +49,7 @@ const Appointments = () => {
 
   const handleReject = async (id) => {
     const reason = prompt('Enter rejection reason:');
-    if (reason === null) return; // cancelled
+    if (reason === null) return;
     try {
       await axios.put(`/api/appointments/${id}/reject`, { rejectionReason: reason || 'Not available' });
       toast.info('Appointment rejected');
@@ -134,7 +134,7 @@ const Appointments = () => {
         </div>
       </div>
 
-      {/* Filters and Search */}
+      {}
       <div className="card flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-80">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -162,7 +162,7 @@ const Appointments = () => {
         </div>
       </div>
 
-      {/* Appointments Grid */}
+      {}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {filteredAppointments.map((appointment) => (
           <div key={appointment._id} className="card flex flex-col justify-between hover:shadow-md transition">
@@ -194,7 +194,7 @@ const Appointments = () => {
               </div>
             </div>
 
-            {/* Action buttons */}
+            {}
             <div className="pt-2 border-t flex flex-wrap items-center justify-between gap-2">
               <div className="flex gap-2 flex-1">
                 {appointment.status === 'pending' && (

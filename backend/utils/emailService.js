@@ -1,6 +1,5 @@
 const nodemailer = require('nodemailer');
 
-// Create transporter
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
@@ -11,7 +10,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Send email
 exports.sendEmail = async (options) => {
   try {
     const mailOptions = {
@@ -34,7 +32,6 @@ exports.sendEmail = async (options) => {
   }
 };
 
-// Email templates
 exports.appointmentInviteEmail = (visitorName, hostName, date, time, purpose) => {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

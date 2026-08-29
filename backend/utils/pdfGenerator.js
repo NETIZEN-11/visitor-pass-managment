@@ -2,11 +2,10 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// Generate visitor pass PDF
 exports.generatePassPDF = async (passData, qrCodeDataURL) => {
   return new Promise((resolve, reject) => {
     try {
-      // Create uploads directory if it doesn't exist
+
       const uploadsDir = path.join(__dirname, '../uploads/passes');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
@@ -20,19 +19,16 @@ exports.generatePassPDF = async (passData, qrCodeDataURL) => {
 
       doc.pipe(stream);
 
-      // Header
       doc.fontSize(24)
          .fillColor('#2196F3')
          .text('VISITOR PASS', { align: 'center' })
          .moveDown();
 
-      // Pass Number
       doc.fontSize(16)
          .fillColor('#333')
          .text(`Pass #: ${passData.passNumber}`, { align: 'center' })
          .moveDown(2);
 
-      // Visitor Details
       doc.fontSize(12)
          .fillColor('#666')
          .text('VISITOR INFORMATION', { underline: true })
@@ -46,7 +42,6 @@ exports.generatePassPDF = async (passData, qrCodeDataURL) => {
          .text(`Company: ${passData.visitorCompany || 'N/A'}`)
          .moveDown();
 
-      // Visit Details
       doc.fontSize(12)
          .fillColor('#666')
          .text('VISIT DETAILS', { underline: true })
@@ -60,7 +55,6 @@ exports.generatePassPDF = async (passData, qrCodeDataURL) => {
          .text(`Valid Until: ${new Date(passData.validUntil).toLocaleString()}`)
          .moveDown(2);
 
-      // QR Code
       if (qrCodeDataURL) {
         const qrImage = qrCodeDataURL.split(',')[1];
         const qrBuffer = Buffer.from(qrImage, 'base64');
@@ -70,7 +64,6 @@ exports.generatePassPDF = async (passData, qrCodeDataURL) => {
         });
       }
 
-      // Footer
       doc.moveDown(2)
          .fontSize(10)
          .fillColor('#999')

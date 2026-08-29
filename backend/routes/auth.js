@@ -6,16 +6,12 @@ const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const { logActivity, logFailedActivity } = require('../middleware/activityLogger');
 
-// Generate JWT token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '7d'
   });
 };
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
 router.post('/register', [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
@@ -30,7 +26,6 @@ router.post('/register', [
 
     const { name, email, password, role, phone, department } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -39,7 +34,6 @@ router.post('/register', [
       });
     }
 
-    // Create user
     const user = await User.create({
       name,
       email,
@@ -72,9 +66,6 @@ router.post('/register', [
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
 router.post('/login', [
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').notEmpty().withMessage('Password is required')
@@ -87,7 +78,6 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
-    // Check user exists
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({
@@ -96,7 +86,6 @@ router.post('/login', [
       });
     }
 
-    // Check if user is active
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
@@ -104,7 +93,6 @@ router.post('/login', [
       });
     }
 
-    // Verify password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
@@ -115,7 +103,6 @@ router.post('/login', [
 
     const token = generateToken(user._id);
 
-    // Log successful login
     await logActivity(user._id, 'login', `User logged in successfully`, null, null, req);
 
     res.json({
@@ -139,9 +126,6 @@ router.post('/login', [
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
 router.get('/me', protect, async (req, res) => {
   try {
     res.json({

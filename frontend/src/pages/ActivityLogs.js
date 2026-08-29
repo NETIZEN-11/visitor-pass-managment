@@ -21,10 +21,10 @@ const ActivityLogs = () => {
 
   const fetchLogs = async () => {
     try {
-      const endpoint = user?.role === 'admin' || user?.role === 'security' 
-        ? '/api/activitylogs' 
+      const endpoint = user?.role === 'admin' || user?.role === 'security'
+        ? '/api/activitylogs'
         : '/api/activitylogs/my-activity';
-      
+
       const params = { page, limit: 20 };
       if (filter !== 'all') params.action = filter;
 
@@ -64,7 +64,7 @@ const ActivityLogs = () => {
   };
 
   const formatAction = (action) => {
-    return action.split('_').map(word => 
+    return action.split('_').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
@@ -82,13 +82,13 @@ const ActivityLogs = () => {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Activity Logs</h1>
         <p className="mt-2 text-gray-600">
-          {user?.role === 'admin' || user?.role === 'security' 
-            ? 'Monitor all system activities' 
+          {user?.role === 'admin' || user?.role === 'security'
+            ? 'Monitor all system activities'
             : 'View your activity history'}
         </p>
       </div>
 
-      {/* Statistics for Admin */}
+      {}
       {user?.role === 'admin' && stats && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="card">
@@ -112,7 +112,7 @@ const ActivityLogs = () => {
         </div>
       )}
 
-      {/* Filters */}
+      {}
       <div className="card">
         <div className="flex flex-wrap gap-2">
           {['all', 'login', 'create_visitor', 'issue_pass', 'checkin', 'checkout', 'approve_appointment'].map((action) => (
@@ -129,7 +129,7 @@ const ActivityLogs = () => {
         </div>
       </div>
 
-      {/* Activity Logs Table */}
+      {}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -191,7 +191,7 @@ const ActivityLogs = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {}
         {totalPages > 1 && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
             <button

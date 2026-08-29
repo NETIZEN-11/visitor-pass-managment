@@ -22,7 +22,7 @@ const Visitors = () => {
 
   useEffect(() => {
     fetchVisitors();
-    // eslint-disable-next-line
+
   }, [page, search]);
 
   const fetchVisitors = async () => {
@@ -53,7 +53,7 @@ const Visitors = () => {
 
   const handleToggleBlacklist = async (visitor) => {
     const reason = !visitor.isBlacklisted ? window.prompt('Enter reason for blacklisting:') : null;
-    if (!visitor.isBlacklisted && reason === null) return; // cancelled
+    if (!visitor.isBlacklisted && reason === null) return;
 
     try {
       if (visitor.isBlacklisted) {
@@ -115,7 +115,7 @@ const Visitors = () => {
         </div>
       </div>
 
-      {/* Search */}
+      {}
       <div className="card">
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -129,7 +129,7 @@ const Visitors = () => {
         </div>
       </div>
 
-      {/* Visitors Table */}
+      {}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -217,7 +217,7 @@ const Visitors = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {}
         {totalPages > 1 && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
             <button

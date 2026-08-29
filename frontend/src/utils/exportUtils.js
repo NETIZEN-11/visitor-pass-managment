@@ -1,15 +1,11 @@
-// Utility to export JSON data to CSV and trigger download
-
 export const exportToCSV = (data, filename = 'export.csv') => {
   if (!data || !data.length) {
     alert('No data available to export');
     return;
   }
 
-  // Extract headers
   const headers = Object.keys(data[0]);
-  
-  // Format rows
+
   const csvRows = [];
   csvRows.push(headers.join(','));
 

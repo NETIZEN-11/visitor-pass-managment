@@ -32,7 +32,7 @@ const VisitorForm = () => {
     return () => {
       stopCamera();
     };
-    // eslint-disable-next-line
+
   }, [id]);
 
   const fetchVisitor = async () => {
@@ -236,7 +236,7 @@ const VisitorForm = () => {
             />
           </div>
 
-          {/* Photo Capture Section */}
+          {}
           <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
             <label className="label font-semibold">Visitor Photo</label>
             <div className="flex items-center gap-4">

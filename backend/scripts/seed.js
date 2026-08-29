@@ -11,7 +11,7 @@ const { generateQRCode } = require('../utils/qrGenerator');
 
 const seedDatabase = async () => {
   try {
-    // Connect to MongoDB
+
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
@@ -19,7 +19,6 @@ const seedDatabase = async () => {
 
     console.log('MongoDB connected');
 
-    // Clear existing data
     await User.deleteMany({});
     await Visitor.deleteMany({});
     await Appointment.deleteMany({});
@@ -28,7 +27,6 @@ const seedDatabase = async () => {
 
     console.log('Existing data cleared');
 
-    // Create users
     const users = await User.create([
       {
         name: 'Admin User',
@@ -66,7 +64,6 @@ const seedDatabase = async () => {
 
     console.log('Users created');
 
-    // Create visitors
     const visitors = await Visitor.create([
       {
         name: 'Alice Visitor',
@@ -102,7 +99,6 @@ const seedDatabase = async () => {
 
     console.log('Visitors created');
 
-    // Create appointments
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(10, 0, 0, 0);
@@ -147,7 +143,6 @@ const seedDatabase = async () => {
 
     console.log('Appointments created');
 
-    // Create Passes
     const validFrom = new Date();
     const validUntil = new Date();
     validUntil.setHours(validUntil.getHours() + 8);
@@ -195,7 +190,6 @@ const seedDatabase = async () => {
 
     console.log('Passes created');
 
-    // Create Check-in Log
     await CheckLog.create({
       pass: passes[0]._id,
       visitor: visitors[0]._id,
@@ -229,4 +223,3 @@ const seedDatabase = async () => {
 };
 
 seedDatabase();
-

@@ -11,9 +11,6 @@ const upload = require('../config/multer');
 const { sendEmail, appointmentInviteEmail, appointmentApprovedEmail } = require('../utils/emailService');
 const { sendSMS, appointmentInviteSMS, appointmentApprovedSMS } = require('../utils/smsService');
 
-// @route   POST /api/appointments/pre-register
-// @desc    Public visitor pre-registration for appointment
-// @access  Public
 router.post('/pre-register', upload.single('photo'), [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
@@ -45,7 +42,6 @@ router.post('/pre-register', upload.single('photo'), [
       photoBase64
     } = req.body;
 
-    // Verify host exists and is active
     const host = await User.findById(hostId);
     if (!host || !host.isActive) {
       return res.status(404).json({
@@ -54,7 +50,6 @@ router.post('/pre-register', upload.single('photo'), [
       });
     }
 
-    // Handle photo from uploaded file or webcam base64
     let photoPath = null;
     if (req.file) {
       photoPath = `/uploads/photos/${req.file.filename}`;
@@ -66,7 +61,6 @@ router.post('/pre-register', upload.single('photo'), [
       photoPath = `/uploads/photos/${filename}`;
     }
 
-    // Find or create visitor
     let visitor = await Visitor.findOne({ email: email.toLowerCase() });
     if (visitor) {
       if (visitor.isBlacklisted) {
@@ -98,7 +92,6 @@ router.post('/pre-register', upload.single('photo'), [
       });
     }
 
-    // Create Appointment
     const appointment = await Appointment.create({
       visitor: visitor._id,
       host: hostId,
@@ -111,7 +104,6 @@ router.post('/pre-register', upload.single('photo'), [
 
     await appointment.populate('visitor host');
 
-    // Notify Host via email
     await sendEmail({
       email: host.email,
       subject: 'New Visitor Pre-Registration Request',
@@ -131,7 +123,6 @@ router.post('/pre-register', upload.single('photo'), [
       `
     });
 
-    // Notify Visitor via email
     await sendEmail({
       email: visitor.email,
       subject: 'Pre-Registration Received - Visitor Pass System',
@@ -159,10 +150,6 @@ router.post('/pre-register', upload.single('photo'), [
   }
 });
 
-
-// @route   POST /api/appointments
-// @desc    Create appointment
-// @access  Private (Employee, Admin)
 router.post('/', protect, authorize('employee', 'admin'), [
   body('visitorId').notEmpty().withMessage('Visitor ID is required'),
   body('scheduledDate').notEmpty().withMessage('Scheduled date is required'),
@@ -177,7 +164,6 @@ router.post('/', protect, authorize('employee', 'admin'), [
 
     const { visitorId, scheduledDate, scheduledTime, purpose, location, notes } = req.body;
 
-    // Check if visitor exists
     const visitor = await Visitor.findById(visitorId);
     if (!visitor) {
       return res.status(404).json({
@@ -186,7 +172,6 @@ router.post('/', protect, authorize('employee', 'admin'), [
       });
     }
 
-    // Check if visitor is blacklisted
     if (visitor.isBlacklisted) {
       return res.status(400).json({
         success: false,
@@ -206,7 +191,6 @@ router.post('/', protect, authorize('employee', 'admin'), [
 
     await appointment.populate('visitor host');
 
-    // Send notification
     const emailHtml = appointmentInviteEmail(
       visitor.name,
       req.user.name,
@@ -239,16 +223,12 @@ router.post('/', protect, authorize('employee', 'admin'), [
   }
 });
 
-// @route   GET /api/appointments
-// @desc    Get all appointments
-// @access  Private
 router.get('/', protect, async (req, res) => {
   try {
     const { status, search, page = 1, limit = 10, hostId } = req.query;
-    
+
     const query = {};
-    
-    // Filter by host for employees
+
     if (req.user.role === 'employee') {
       query.host = req.user._id;
     } else if (hostId) {
@@ -256,7 +236,7 @@ router.get('/', protect, async (req, res) => {
     }
 
     if (status) query.status = status;
-    
+
     if (search) {
       const visitors = await Visitor.find({
         $or: [
@@ -264,7 +244,7 @@ router.get('/', protect, async (req, res) => {
           { email: { $regex: search, $options: 'i' } }
         ]
       }).select('_id');
-      
+
       query.visitor = { $in: visitors.map(v => v._id) };
     }
 
@@ -294,16 +274,13 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/appointments/:id
-// @desc    Get appointment by ID
-// @access  Private
 router.get('/:id', protect, async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
       .populate('visitor', 'name email phone photo company idProof idProofNumber')
       .populate('host', 'name email department phone')
       .populate('approvedBy', 'name email');
-    
+
     if (!appointment) {
       return res.status(404).json({
         success: false,
@@ -324,9 +301,6 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   PUT /api/appointments/:id/approve
-// @desc    Approve appointment
-// @access  Private (Employee, Admin, Security)
 router.put('/:id/approve', protect, authorize('employee', 'admin', 'security'), async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
@@ -352,7 +326,6 @@ router.put('/:id/approve', protect, authorize('employee', 'admin', 'security'), 
     appointment.approvalDate = new Date();
     await appointment.save();
 
-    // Send notification
     const emailHtml = appointmentApprovedEmail(
       appointment.visitor.name,
       new Date(appointment.scheduledDate).toLocaleDateString(),
@@ -388,9 +361,6 @@ router.put('/:id/approve', protect, authorize('employee', 'admin', 'security'), 
   }
 });
 
-// @route   PUT /api/appointments/:id/reject
-// @desc    Reject appointment
-// @access  Private (Employee, Admin, Security)
 router.put('/:id/reject', protect, authorize('employee', 'admin', 'security'), async (req, res) => {
   try {
     const { rejectionReason } = req.body;
@@ -429,9 +399,6 @@ router.put('/:id/reject', protect, authorize('employee', 'admin', 'security'), a
   }
 });
 
-// @route   PUT /api/appointments/:id
-// @desc    Update appointment
-// @access  Private
 router.put('/:id', protect, async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
@@ -443,7 +410,6 @@ router.put('/:id', protect, async (req, res) => {
       });
     }
 
-    // Only host or admin can update
     if (appointment.host.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -474,9 +440,6 @@ router.put('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   DELETE /api/appointments/:id
-// @desc    Delete appointment
-// @access  Private (Admin or Host)
 router.delete('/:id', protect, async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
@@ -488,7 +451,6 @@ router.delete('/:id', protect, async (req, res) => {
       });
     }
 
-    // Only host or admin can delete
     if (appointment.host.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,

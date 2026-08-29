@@ -7,7 +7,6 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
 
-// Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PreRegister from './pages/PreRegister';
@@ -37,7 +36,7 @@ function App() {
           <Route path="/pass-view" element={<DigitalPass />} />
           <Route path="/pass-view/:passNumber" element={<DigitalPass />} />
           <Route path="/verify/:passNumber" element={<DigitalPass />} />
-          
+
           <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
 
             <Route index element={<Navigate to="/dashboard" replace />} />

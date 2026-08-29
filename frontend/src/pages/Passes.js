@@ -22,7 +22,7 @@ const Passes = () => {
 
   useEffect(() => {
     fetchPasses();
-    // eslint-disable-next-line
+
   }, [statusFilter]);
 
   const fetchPasses = async () => {
@@ -41,7 +41,7 @@ const Passes = () => {
 
   const handleRevoke = async (passId) => {
     const reason = window.prompt('Please enter the reason for revoking this pass:');
-    if (reason === null) return; // cancelled
+    if (reason === null) return;
 
     try {
       await axios.put(`/api/passes/${passId}/revoke`, { revocationReason: reason || 'Revoked by authority' });
@@ -120,7 +120,7 @@ const Passes = () => {
         </div>
       </div>
 
-      {/* Filters and Search */}
+      {}
       <div className="card flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-80">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -148,7 +148,7 @@ const Passes = () => {
         </div>
       </div>
 
-      {/* Passes Grid */}
+      {}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {filteredPasses.map((pass) => (
           <div key={pass._id} className="card hover:shadow-lg transition-shadow duration-200 flex flex-col justify-between">
@@ -197,7 +197,7 @@ const Passes = () => {
         </div>
       )}
 
-      {/* Comprehensive Pass Modal */}
+      {}
       {selectedPass && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedPass(null)}>
           <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>

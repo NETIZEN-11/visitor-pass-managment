@@ -71,7 +71,6 @@ const passSchema = new mongoose.Schema({
   }
 });
 
-// Generate pass number
 passSchema.pre('save', async function(next) {
   if (!this.passNumber) {
     const date = new Date();

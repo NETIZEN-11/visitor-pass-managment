@@ -74,7 +74,6 @@ const PreRegister = () => {
     }
   };
 
-  // Webcam controls
   const startCamera = async () => {
     try {
       setIsCameraActive(true);
@@ -106,7 +105,7 @@ const PreRegister = () => {
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const base64 = canvas.toDataURL('image/png');
       setPhotoPreview(base64);
-      setPhotoFile(null); // using base64
+      setPhotoFile(null);
       stopCamera();
       toast.success('Photo captured successfully!');
     }
@@ -215,7 +214,7 @@ const PreRegister = () => {
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          {/* Header Banner */}
+          {}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 text-white">
             <div className="flex items-center space-x-3">
               <BuildingOfficeIcon className="h-9 w-9 text-blue-200" />
@@ -227,7 +226,7 @@ const PreRegister = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            {/* Section: Visitor Details */}
+            {}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4 flex items-center">
                 <UserIcon className="h-5 w-5 mr-2 text-blue-600" />
@@ -327,7 +326,7 @@ const PreRegister = () => {
               </div>
             </div>
 
-            {/* Section: Visit Information */}
+            {}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4 flex items-center">
                 <CalendarIcon className="h-5 w-5 mr-2 text-blue-600" />
@@ -403,15 +402,15 @@ const PreRegister = () => {
               </div>
             </div>
 
-            {/* Section: Photo Capture */}
+            {}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4 flex items-center">
                 <CameraIcon className="h-5 w-5 mr-2 text-blue-600" />
                 3. Visitor Photo (Badge & Identification)
               </h3>
-              
+
               <div className="flex flex-col sm:flex-row items-center gap-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                {/* Photo Preview box */}
+                {}
                 <div className="w-32 h-32 bg-gray-200 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300">
                   {photoPreview ? (
                     <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
@@ -479,7 +478,7 @@ const PreRegister = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {}
             <div className="pt-4">
               <button
                 type="submit"

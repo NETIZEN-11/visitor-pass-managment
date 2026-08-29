@@ -67,7 +67,6 @@ const activityLogSchema = new mongoose.Schema({
   }
 });
 
-// Index for faster queries
 activityLogSchema.index({ user: 1, timestamp: -1 });
 activityLogSchema.index({ action: 1, timestamp: -1 });
 activityLogSchema.index({ timestamp: -1 });

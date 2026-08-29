@@ -12,9 +12,6 @@ const { generatePassPDF } = require('../utils/pdfGenerator');
 const { sendEmail, passIssuedEmail } = require('../utils/emailService');
 const { sendSMS, passIssuedSMS } = require('../utils/smsService');
 
-// @route   POST /api/passes
-// @desc    Issue a new pass
-// @access  Private (Security, Admin)
 router.post('/', protect, authorize('security', 'admin'), [
   body('visitorId').notEmpty().withMessage('Visitor ID is required'),
   body('hostId').notEmpty().withMessage('Host ID is required'),
@@ -30,7 +27,6 @@ router.post('/', protect, authorize('security', 'admin'), [
 
     const { visitorId, hostId, appointmentId, validFrom, validUntil, purpose } = req.body;
 
-    // Check if visitor exists
     const visitor = await Visitor.findById(visitorId);
     if (!visitor) {
       return res.status(404).json({
@@ -39,7 +35,6 @@ router.post('/', protect, authorize('security', 'admin'), [
       });
     }
 
-    // Check if visitor is blacklisted
     if (visitor.isBlacklisted) {
       return res.status(400).json({
         success: false,
@@ -47,7 +42,6 @@ router.post('/', protect, authorize('security', 'admin'), [
       });
     }
 
-    // Create pass
     const pass = new Pass({
       visitor: visitorId,
       host: hostId,
@@ -58,7 +52,6 @@ router.post('/', protect, authorize('security', 'admin'), [
       purpose
     });
 
-    // Generate QR code
     const qrData = {
       passNumber: pass.passNumber,
       visitorId: visitor._id,
@@ -73,7 +66,6 @@ router.post('/', protect, authorize('security', 'admin'), [
     await pass.save();
     await pass.populate('visitor host issuedBy');
 
-    // Generate PDF
     const pdfData = {
       passNumber: pass.passNumber,
       visitorName: visitor.name,
@@ -90,7 +82,6 @@ router.post('/', protect, authorize('security', 'admin'), [
     pass.pdfPath = pdfPath;
     await pass.save();
 
-    // Send notification
     const emailHtml = passIssuedEmail(
       visitor.name,
       pass.passNumber,
@@ -123,17 +114,14 @@ router.post('/', protect, authorize('security', 'admin'), [
   }
 });
 
-// @route   GET /api/passes
-// @desc    Get all passes
-// @access  Private
 router.get('/', protect, async (req, res) => {
   try {
     const { status, search, page = 1, limit = 10, visitorId } = req.query;
-    
+
     const query = {};
     if (status) query.status = status;
     if (visitorId) query.visitor = visitorId;
-    
+
     if (search) {
       const visitors = await Visitor.find({
         $or: [
@@ -141,7 +129,7 @@ router.get('/', protect, async (req, res) => {
           { email: { $regex: search, $options: 'i' } }
         ]
       }).select('_id');
-      
+
       query.visitor = { $in: visitors.map(v => v._id) };
     }
 
@@ -171,9 +159,6 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/passes/:id
-// @desc    Get pass by ID
-// @access  Private
 router.get('/:id', protect, async (req, res) => {
   try {
     const pass = await Pass.findById(req.params.id)
@@ -181,7 +166,7 @@ router.get('/:id', protect, async (req, res) => {
       .populate('host', 'name email department phone')
       .populate('issuedBy', 'name email')
       .populate('appointment');
-    
+
     if (!pass) {
       return res.status(404).json({
         success: false,
@@ -202,15 +187,12 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/passes/public/:passNumber
-// @desc    Get pass by pass number for public verification / visitor view
-// @access  Public
 router.get('/public/:passNumber', async (req, res) => {
   try {
     const pass = await Pass.findOne({ passNumber: req.params.passNumber })
       .populate('visitor', 'name email phone photo company idProof idProofNumber')
       .populate('host', 'name email department phone');
-    
+
     if (!pass) {
       return res.status(404).json({
         success: false,
@@ -220,7 +202,7 @@ router.get('/public/:passNumber', async (req, res) => {
 
     const now = new Date();
     const isExpired = now > new Date(pass.validUntil);
-    
+
     res.json({
       success: true,
       pass,
@@ -235,9 +217,6 @@ router.get('/public/:passNumber', async (req, res) => {
   }
 });
 
-// @route   GET /api/passes/:id/pdf
-// @desc    Download pass PDF badge
-// @access  Public / Private
 router.get('/:id/pdf', async (req, res) => {
   try {
     const pass = await Pass.findById(req.params.id)
@@ -251,7 +230,6 @@ router.get('/:id/pdf', async (req, res) => {
       });
     }
 
-    // If PDF doesn't exist on disk, regenerate it
     let pdfFullPath = pass.pdfPath ? path.join(__dirname, '..', pass.pdfPath) : null;
     if (!pdfFullPath || !fs.existsSync(pdfFullPath)) {
       const qrData = {
@@ -289,15 +267,12 @@ router.get('/:id/pdf', async (req, res) => {
   }
 });
 
-// @route   GET /api/passes/number/:passNumber
-// @desc    Get pass by pass number (for QR scan)
-// @access  Private
 router.get('/number/:passNumber', protect, async (req, res) => {
   try {
     const pass = await Pass.findOne({ passNumber: req.params.passNumber })
       .populate('visitor', 'name email phone photo company')
       .populate('host', 'name email department');
-    
+
     if (!pass) {
       return res.status(404).json({
         success: false,
@@ -305,10 +280,9 @@ router.get('/number/:passNumber', protect, async (req, res) => {
       });
     }
 
-    // Check if pass is valid
     const now = new Date();
     const isExpired = now > new Date(pass.validUntil);
-    
+
     res.json({
       success: true,
       pass,
@@ -323,10 +297,6 @@ router.get('/number/:passNumber', protect, async (req, res) => {
   }
 });
 
-
-// @route   PUT /api/passes/:id/revoke
-// @desc    Revoke a pass
-// @access  Private (Security, Admin)
 router.put('/:id/revoke', protect, authorize('security', 'admin'), async (req, res) => {
   try {
     const { revocationReason } = req.body;
@@ -368,9 +338,6 @@ router.put('/:id/revoke', protect, authorize('security', 'admin'), async (req, r
   }
 });
 
-// @route   DELETE /api/passes/:id
-// @desc    Delete pass
-// @access  Private (Admin)
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const pass = await Pass.findByIdAndDelete(req.params.id);
