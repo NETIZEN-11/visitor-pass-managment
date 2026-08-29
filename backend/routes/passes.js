@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const Pass = require('../models/Pass');
 const Visitor = require('../models/Visitor');
@@ -200,6 +202,93 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/passes/public/:passNumber
+// @desc    Get pass by pass number for public verification / visitor view
+// @access  Public
+router.get('/public/:passNumber', async (req, res) => {
+  try {
+    const pass = await Pass.findOne({ passNumber: req.params.passNumber })
+      .populate('visitor', 'name email phone photo company idProof idProofNumber')
+      .populate('host', 'name email department phone');
+    
+    if (!pass) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pass not found'
+      });
+    }
+
+    const now = new Date();
+    const isExpired = now > new Date(pass.validUntil);
+    
+    res.json({
+      success: true,
+      pass,
+      isValid: pass.status === 'active' && !isExpired
+    });
+  } catch (error) {
+    console.error('Get public pass error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/passes/:id/pdf
+// @desc    Download pass PDF badge
+// @access  Public / Private
+router.get('/:id/pdf', async (req, res) => {
+  try {
+    const pass = await Pass.findById(req.params.id)
+      .populate('visitor')
+      .populate('host');
+
+    if (!pass) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pass not found'
+      });
+    }
+
+    // If PDF doesn't exist on disk, regenerate it
+    let pdfFullPath = pass.pdfPath ? path.join(__dirname, '..', pass.pdfPath) : null;
+    if (!pdfFullPath || !fs.existsSync(pdfFullPath)) {
+      const qrData = {
+        passNumber: pass.passNumber,
+        visitorId: pass.visitor._id,
+        visitorName: pass.visitor.name,
+        validFrom: pass.validFrom,
+        validUntil: pass.validUntil
+      };
+      const qrCode = pass.qrCode || (await generateQRCode(qrData));
+      const pdfData = {
+        passNumber: pass.passNumber,
+        visitorName: pass.visitor.name,
+        visitorEmail: pass.visitor.email,
+        visitorPhone: pass.visitor.phone,
+        visitorCompany: pass.visitor.company,
+        hostName: pass.host.name,
+        purpose: pass.purpose,
+        validFrom: pass.validFrom,
+        validUntil: pass.validUntil
+      };
+      const newPdfPath = await generatePassPDF(pdfData, qrCode);
+      pass.pdfPath = newPdfPath;
+      await pass.save();
+      pdfFullPath = path.join(__dirname, '..', newPdfPath);
+    }
+
+    res.download(pdfFullPath, `pass_${pass.passNumber}.pdf`);
+  } catch (error) {
+    console.error('Download pass PDF error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to download pass PDF'
+    });
+  }
+});
+
 // @route   GET /api/passes/number/:passNumber
 // @desc    Get pass by pass number (for QR scan)
 // @access  Private
@@ -233,6 +322,7 @@ router.get('/number/:passNumber', protect, async (req, res) => {
     });
   }
 });
+
 
 // @route   PUT /api/passes/:id/revoke
 // @desc    Revoke a pass

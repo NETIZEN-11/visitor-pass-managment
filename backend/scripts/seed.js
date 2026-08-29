@@ -5,6 +5,9 @@ require('dotenv').config();
 const User = require('../models/User');
 const Visitor = require('../models/Visitor');
 const Appointment = require('../models/Appointment');
+const Pass = require('../models/Pass');
+const CheckLog = require('../models/CheckLog');
+const { generateQRCode } = require('../utils/qrGenerator');
 
 const seedDatabase = async () => {
   try {
@@ -20,6 +23,8 @@ const seedDatabase = async () => {
     await User.deleteMany({});
     await Visitor.deleteMany({});
     await Appointment.deleteMany({});
+    await Pass.deleteMany({});
+    await CheckLog.deleteMany({});
 
     console.log('Existing data cleared');
 
@@ -142,6 +147,68 @@ const seedDatabase = async () => {
 
     console.log('Appointments created');
 
+    // Create Passes
+    const validFrom = new Date();
+    const validUntil = new Date();
+    validUntil.setHours(validUntil.getHours() + 8);
+
+    const qr1 = await generateQRCode({
+      passNumber: 'VP-1001',
+      visitorId: visitors[0]._id,
+      visitorName: visitors[0].name,
+      validFrom,
+      validUntil
+    });
+
+    const qr2 = await generateQRCode({
+      passNumber: 'VP-1002',
+      visitorId: visitors[2]._id,
+      visitorName: visitors[2].name,
+      validFrom,
+      validUntil
+    });
+
+    const passes = await Pass.create([
+      {
+        passNumber: 'VP-1001',
+        visitor: visitors[0]._id,
+        host: users[2]._id,
+        issuedBy: users[1]._id,
+        validFrom,
+        validUntil,
+        purpose: 'Product Demo & Meeting',
+        qrCode: qr1,
+        status: 'active'
+      },
+      {
+        passNumber: 'VP-1002',
+        visitor: visitors[2]._id,
+        host: users[2]._id,
+        issuedBy: users[1]._id,
+        validFrom,
+        validUntil,
+        purpose: 'Technical Consultation',
+        qrCode: qr2,
+        status: 'active'
+      }
+    ]);
+
+    console.log('Passes created');
+
+    // Create Check-in Log
+    await CheckLog.create({
+      pass: passes[0]._id,
+      visitor: visitors[0]._id,
+      checkInBy: users[1]._id,
+      checkInTime: new Date(),
+      location: 'Main Gate Reception',
+      temperature: 98.6,
+      status: 'checked-in',
+      notes: 'Checked in for demo'
+    });
+
+    console.log('Check logs created');
+
     console.log('\n=== Seed Data Summary ===');
     console.log('\nUsers:');
     console.log('Admin: admin@example.com / admin123');
@@ -150,6 +217,8 @@ const seedDatabase = async () => {
     console.log('Employee 2: jane@example.com / employee123');
     console.log('\nVisitors: 3 visitors created');
     console.log('Appointments: 3 appointments created');
+    console.log('Passes: VP-1001 (Active), VP-1002 (Active)');
+    console.log('CheckLogs: 1 active check-in');
     console.log('\n=========================\n');
 
     process.exit(0);
@@ -160,3 +229,4 @@ const seedDatabase = async () => {
 };
 
 seedDatabase();
+

@@ -10,6 +10,8 @@ import Layout from './components/Layout';
 // Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
+import PreRegister from './pages/PreRegister';
+import DigitalPass from './pages/DigitalPass';
 import Dashboard from './pages/Dashboard';
 import Visitors from './pages/Visitors';
 import VisitorForm from './pages/VisitorForm';
@@ -31,8 +33,13 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/pre-register" element={<PreRegister />} />
+          <Route path="/pass-view" element={<DigitalPass />} />
+          <Route path="/pass-view/:passNumber" element={<DigitalPass />} />
+          <Route path="/verify/:passNumber" element={<DigitalPass />} />
           
           <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
+
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="visitors" element={<Visitors />} />

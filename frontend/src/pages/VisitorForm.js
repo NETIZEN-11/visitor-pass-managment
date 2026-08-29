@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { CameraIcon, UserIcon } from '@heroicons/react/24/outline';
 
 const VisitorForm = () => {
   const { id } = useParams();
@@ -11,18 +12,26 @@ const VisitorForm = () => {
     name: '',
     email: '',
     phone: '',
-    idProof: '',
+    idProof: 'National ID',
     idProofNumber: '',
     company: '',
     address: '',
     purpose: ''
   });
   const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+
+  const videoRef = useRef(null);
+  const mediaStreamRef = useRef(null);
 
   useEffect(() => {
     if (id) {
       fetchVisitor();
     }
+    return () => {
+      stopCamera();
+    };
     // eslint-disable-next-line
   }, [id]);
 
@@ -30,6 +39,9 @@ const VisitorForm = () => {
     try {
       const response = await axios.get(`/api/visitors/${id}`);
       setFormData(response.data.visitor);
+      if (response.data.visitor.photo) {
+        setPhotoPreview(response.data.visitor.photo);
+      }
     } catch (error) {
       toast.error('Failed to fetch visitor');
     }
@@ -43,7 +55,49 @@ const VisitorForm = () => {
   };
 
   const handlePhotoChange = (e) => {
-    setPhoto(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setPhoto(file);
+      setPhotoPreview(URL.createObjectURL(file));
+      stopCamera();
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      setIsCameraActive(true);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 400 } });
+      mediaStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      toast.error('Unable to access camera. Please use file upload instead.');
+      setIsCameraActive(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth || 320;
+      canvas.height = videoRef.current.videoHeight || 240;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      const base64 = canvas.toDataURL('image/png');
+      setPhotoPreview(base64);
+      setPhoto(null);
+      stopCamera();
+      toast.success('Live photo captured!');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -53,10 +107,12 @@ const VisitorForm = () => {
     try {
       const data = new FormData();
       Object.keys(formData).forEach(key => {
-        data.append(key, formData[key]);
+        data.append(key, formData[key] || '');
       });
       if (photo) {
         data.append('photo', photo);
+      } else if (photoPreview && photoPreview.startsWith('data:image')) {
+        data.append('photoBase64', photoPreview);
       }
 
       if (id) {
@@ -125,7 +181,7 @@ const VisitorForm = () => {
                 type="text"
                 name="company"
                 className="input"
-                value={formData.company}
+                value={formData.company || ''}
                 onChange={handleChange}
               />
             </div>
@@ -135,13 +191,13 @@ const VisitorForm = () => {
               <select
                 name="idProof"
                 className="input"
-                value={formData.idProof}
+                value={formData.idProof || 'National ID'}
                 onChange={handleChange}
               >
-                <option value="">Select ID Proof</option>
+                <option value="National ID">National ID / Aadhaar</option>
                 <option value="Passport">Passport</option>
                 <option value="Driver License">Driver License</option>
-                <option value="National ID">National ID</option>
+                <option value="Employee ID">Employee ID</option>
                 <option value="Other">Other</option>
               </select>
             </div>
@@ -152,7 +208,7 @@ const VisitorForm = () => {
                 type="text"
                 name="idProofNumber"
                 className="input"
-                value={formData.idProofNumber}
+                value={formData.idProofNumber || ''}
                 onChange={handleChange}
               />
             </div>
@@ -162,9 +218,9 @@ const VisitorForm = () => {
             <label className="label">Address</label>
             <textarea
               name="address"
-              rows="3"
+              rows="2"
               className="input"
-              value={formData.address}
+              value={formData.address || ''}
               onChange={handleChange}
             ></textarea>
           </div>
@@ -175,19 +231,74 @@ const VisitorForm = () => {
               type="text"
               name="purpose"
               className="input"
-              value={formData.purpose}
+              value={formData.purpose || ''}
               onChange={handleChange}
             />
           </div>
 
-          <div>
-            <label className="label">Photo</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoChange}
-              className="input"
-            />
+          {/* Photo Capture Section */}
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+            <label className="label font-semibold">Visitor Photo</label>
+            <div className="flex items-center gap-4">
+              <div className="w-24 h-24 bg-gray-200 rounded-xl overflow-hidden flex items-center justify-center border border-gray-300">
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Visitor" className="w-full h-full object-cover" />
+                ) : (
+                  <UserIcon className="w-12 h-12 text-gray-400" />
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <label className="btn btn-secondary cursor-pointer text-xs">
+                  Upload Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                </label>
+
+                {!isCameraActive ? (
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="btn btn-primary text-xs flex items-center"
+                  >
+                    <CameraIcon className="w-4 h-4 mr-1" />
+                    Webcam Capture
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="btn btn-primary text-xs"
+                    >
+                      Snap Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="btn btn-danger text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {isCameraActive && (
+              <div className="mt-2">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-48 h-36 bg-black rounded-lg object-cover"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-4">

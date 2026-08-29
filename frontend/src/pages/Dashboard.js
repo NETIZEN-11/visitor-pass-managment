@@ -93,13 +93,53 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="mt-2 text-gray-600">Welcome to Visitor Pass Management System</p>
         </div>
-        <button
-          onClick={fetchDashboardData}
-          className="btn btn-secondary flex items-center"
-        >
-          <ArrowTrendingUpIcon className="h-5 w-5 mr-2" />
-          Refresh
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const summaryData = [
+                { Metric: 'Total Visitors', Count: stats?.stats?.totalVisitors || 0 },
+                { Metric: 'Today Check-ins', Count: stats?.stats?.todayCheckIns || 0 },
+                { Metric: 'Currently Checked In', Count: stats?.stats?.currentlyCheckedIn || 0 },
+                { Metric: 'Pending Appointments', Count: stats?.stats?.pendingAppointments || 0 },
+                { Metric: 'Active Passes', Count: stats?.stats?.activePasses || 0 },
+                { Metric: 'Today Appointments', Count: stats?.stats?.todayAppointments || 0 }
+              ];
+              import('../utils/exportUtils').then(mod => {
+                mod.exportToCSV(summaryData, `dashboard-summary-${new Date().toISOString().split('T')[0]}.csv`);
+              });
+            }}
+            className="btn btn-secondary flex items-center text-sm"
+          >
+            Export Stats
+          </button>
+          <button
+            onClick={fetchDashboardData}
+            className="btn btn-primary flex items-center text-sm"
+          >
+            <ArrowTrendingUpIcon className="h-5 w-5 mr-1.5" />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Action Shortcuts */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Link to="/scanner" className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow hover:shadow-md transition text-center">
+          <span className="block text-lg font-bold">QR Scanner</span>
+          <span className="text-xs text-blue-100">Scan In / Out</span>
+        </Link>
+        <Link to="/passes/new" className="p-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl shadow hover:shadow-md transition text-center">
+          <span className="block text-lg font-bold">Issue Pass</span>
+          <span className="text-xs text-indigo-100">Create Pass & QR</span>
+        </Link>
+        <Link to="/appointments/new" className="p-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl shadow hover:shadow-md transition text-center">
+          <span className="block text-lg font-bold">Book Visit</span>
+          <span className="text-xs text-purple-100">New Appointment</span>
+        </Link>
+        <Link to="/pre-register" target="_blank" className="p-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-xl shadow hover:shadow-md transition text-center">
+          <span className="block text-lg font-bold">Visitor Portal</span>
+          <span className="text-xs text-emerald-100">Pre-Registration</span>
+        </Link>
       </div>
 
       {/* Stats Grid */}

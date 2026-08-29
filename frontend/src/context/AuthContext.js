@@ -30,9 +30,10 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.get('/api/auth/me');
       setUser(response.data.user);
     } catch (error) {
-      console.error('Fetch user error:', error);
+      // Stale or expired token; remove it cleanly
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
+      setUser(null);
     } finally {
       setLoading(false);
     }

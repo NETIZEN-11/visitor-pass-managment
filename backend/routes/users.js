@@ -170,4 +170,28 @@ router.get('/role/employees', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/users/public/hosts
+// @desc    Get all active hosts for visitor pre-registration
+// @access  Public
+router.get('/public/hosts', async (req, res) => {
+  try {
+    const hosts = await User.find({ 
+      role: { $in: ['employee', 'admin'] },
+      isActive: true 
+    }).select('name email department');
+
+    res.json({
+      success: true,
+      hosts
+    });
+  } catch (error) {
+    console.error('Get public hosts error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 module.exports = router;
+

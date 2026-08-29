@@ -1,12 +1,164 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const Appointment = require('../models/Appointment');
 const Visitor = require('../models/Visitor');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
+const upload = require('../config/multer');
 const { sendEmail, appointmentInviteEmail, appointmentApprovedEmail } = require('../utils/emailService');
 const { sendSMS, appointmentInviteSMS, appointmentApprovedSMS } = require('../utils/smsService');
+
+// @route   POST /api/appointments/pre-register
+// @desc    Public visitor pre-registration for appointment
+// @access  Public
+router.post('/pre-register', upload.single('photo'), [
+  body('name').notEmpty().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('phone').notEmpty().withMessage('Phone is required'),
+  body('hostId').notEmpty().withMessage('Host is required'),
+  body('scheduledDate').notEmpty().withMessage('Scheduled date is required'),
+  body('scheduledTime').notEmpty().withMessage('Scheduled time is required'),
+  body('purpose').notEmpty().withMessage('Purpose is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const {
+      name,
+      email,
+      phone,
+      idProof,
+      idProofNumber,
+      company,
+      address,
+      hostId,
+      scheduledDate,
+      scheduledTime,
+      purpose,
+      notes,
+      photoBase64
+    } = req.body;
+
+    // Verify host exists and is active
+    const host = await User.findById(hostId);
+    if (!host || !host.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: 'Selected host not found or inactive'
+      });
+    }
+
+    // Handle photo from uploaded file or webcam base64
+    let photoPath = null;
+    if (req.file) {
+      photoPath = `/uploads/photos/${req.file.filename}`;
+    } else if (photoBase64 && photoBase64.startsWith('data:image')) {
+      const base64Data = photoBase64.replace(/^data:image\/\w+;base64,/, '');
+      const filename = `visitor-${Date.now()}-${Math.round(Math.random() * 1E9)}.png`;
+      const fullPath = path.join(__dirname, '../uploads/photos', filename);
+      fs.writeFileSync(fullPath, base64Data, 'base64');
+      photoPath = `/uploads/photos/${filename}`;
+    }
+
+    // Find or create visitor
+    let visitor = await Visitor.findOne({ email: email.toLowerCase() });
+    if (visitor) {
+      if (visitor.isBlacklisted) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unable to process pre-registration. Please contact administration.'
+        });
+      }
+      visitor.name = name;
+      visitor.phone = phone;
+      if (idProof) visitor.idProof = idProof;
+      if (idProofNumber) visitor.idProofNumber = idProofNumber;
+      if (company) visitor.company = company;
+      if (address) visitor.address = address;
+      if (purpose) visitor.purpose = purpose;
+      if (photoPath) visitor.photo = photoPath;
+      await visitor.save();
+    } else {
+      visitor = await Visitor.create({
+        name,
+        email: email.toLowerCase(),
+        phone,
+        idProof: idProof || 'Other',
+        idProofNumber: idProofNumber || 'N/A',
+        company,
+        address,
+        purpose,
+        photo: photoPath
+      });
+    }
+
+    // Create Appointment
+    const appointment = await Appointment.create({
+      visitor: visitor._id,
+      host: hostId,
+      scheduledDate,
+      scheduledTime,
+      purpose,
+      notes: notes || 'Pre-registered online by visitor',
+      status: 'pending'
+    });
+
+    await appointment.populate('visitor host');
+
+    // Notify Host via email
+    await sendEmail({
+      email: host.email,
+      subject: 'New Visitor Pre-Registration Request',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>New Visitor Pre-Registration</h2>
+          <p>A visitor has pre-registered for an appointment with you.</p>
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
+            <p><strong>Visitor:</strong> ${visitor.name} (${visitor.email}, ${visitor.phone})</p>
+            <p><strong>Company:</strong> ${visitor.company || 'N/A'}</p>
+            <p><strong>Date:</strong> ${new Date(scheduledDate).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> ${scheduledTime}</p>
+            <p><strong>Purpose:</strong> ${purpose}</p>
+          </div>
+          <p>Please log in to your dashboard to review and approve or reject this request.</p>
+        </div>
+      `
+    });
+
+    // Notify Visitor via email
+    await sendEmail({
+      email: visitor.email,
+      subject: 'Pre-Registration Received - Visitor Pass System',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Pre-Registration Received</h2>
+          <p>Dear ${visitor.name},</p>
+          <p>Thank you for pre-registering your visit with <strong>${host.name}</strong>.</p>
+          <p>Your request is pending host approval. You will receive an update once it is confirmed.</p>
+        </div>
+      `
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Pre-registration submitted successfully! Your host has been notified for approval.',
+      appointment
+    });
+  } catch (error) {
+    console.error('Pre-register appointment error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error'
+    });
+  }
+});
+
 
 // @route   POST /api/appointments
 // @desc    Create appointment
